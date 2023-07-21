@@ -76,34 +76,42 @@ public class CapitalGainsRunner {
 
     List<List<Tax>> taxes = new ArrayList<>();
     for (List<Stock> list : stocks) {
-      List<Tax> taxByStocks = new ArrayList<>();
-      double weightedAvgPrice = 0.0;
-      int currentQuantity = 0;
-      double overallProfit = 0.0;
-      for (Stock operation : list) {
-        double taxValue = 0.0;
-        if (BUY_OPERATION.equals(operation.getOperation())) {
-          weightedAvgPrice = ((currentQuantity * weightedAvgPrice)
-              + (operation.getQuantity() * operation.getUnitCost()))
-              / (currentQuantity + operation.getQuantity());
-          currentQuantity += operation.getQuantity();
-        } else if (SELL_OPERATION.equals(operation.getOperation())) {
-          double profit = (operation.getUnitCost() * operation.getQuantity())
-              - (weightedAvgPrice * operation.getQuantity());
-          overallProfit += profit;
-          if (operation.getUnitCost() > weightedAvgPrice
-              && (operation.getQuantity() * operation.getUnitCost()) > 20000 && overallProfit > 0
-              && currentQuantity > 0) {
-            taxValue = overallProfit * 0.2;
-            overallProfit = 0.0;
-          }
-          currentQuantity -= operation.getQuantity();
-        }
-        taxByStocks.add(new Tax(taxValue));
-      }
+      List<Tax> taxByStocks = processListOfOperations(list);
       taxes.add(taxByStocks);
     }
     return taxes;
+  }
+
+  private static List<Tax> processListOfOperations(List<Stock> list) {
+    List<Tax> taxByStocks = new ArrayList<>();
+    double weightedAvgPrice = 0.0;
+    int currentQuantity = 0;
+    double overallProfit = 0.0;
+    for (Stock operation : list) {
+      double taxValue = 0.0;
+      if (BUY_OPERATION.equals(operation.getOperation())) {
+        weightedAvgPrice = ((currentQuantity * weightedAvgPrice)
+            + (operation.getQuantity() * operation.getUnitCost()))
+            / (currentQuantity + operation.getQuantity());
+        currentQuantity += operation.getQuantity();
+      } else if (SELL_OPERATION.equals(operation.getOperation())) {
+        double profit = (operation.getUnitCost() * operation.getQuantity())
+            - (weightedAvgPrice * operation.getQuantity());
+        if ((operation.getQuantity() * operation.getUnitCost()) > 20000.0 || profit < 0) {
+          overallProfit += profit;
+        }
+        if (operation.getUnitCost() > weightedAvgPrice
+            && (operation.getQuantity() * operation.getUnitCost()) > 20000 && overallProfit > 0
+            && currentQuantity > 0) {
+          taxValue = overallProfit * 0.2;
+          overallProfit = 0.0;
+        }
+        currentQuantity -= operation.getQuantity();
+      }
+      taxByStocks.add(new Tax(taxValue));
+      
+    }
+    return taxByStocks;
   }
 
   private static void writeTaxes(PrintStream out, List<List<Tax>> taxes) {

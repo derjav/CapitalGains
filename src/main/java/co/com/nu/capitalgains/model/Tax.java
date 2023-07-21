@@ -14,7 +14,7 @@ public class Tax implements Serializable {
   }
   
   public Tax(double value) {
-    this.tax = new BigDecimal(value).setScale(2, RoundingMode.HALF_UP);
+    this.tax = BigDecimal.valueOf(value).setScale(2, RoundingMode.HALF_UP);
   }
   
   public Tax(BigDecimal tax) {
